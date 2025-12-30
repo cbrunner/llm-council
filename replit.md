@@ -48,6 +48,16 @@ The workflow "LLM Council" runs both servers:
 - Backend: `python -m backend.main` (port 8001)
 - Frontend: `npm run dev` in frontend/ (port 5000)
 
+### Workflow Configuration Requirements
+The workflow must be configured with:
+- **output_type**: `webview` - to display the frontend in the preview pane
+- **wait_for_port**: `5000` - to wait for the frontend server before showing preview
+
+**Troubleshooting**: If the preview shows JSON/API output instead of the UI:
+1. The frontend server (Vite) may not be running
+2. The webview may be pointing to the wrong port (8001 instead of 5000)
+3. Fix by reconfiguring the workflow with `wait_for_port: 5000` and `output_type: webview`
+
 ## Deployment
 
 - Build: `cd frontend && npm run build`
