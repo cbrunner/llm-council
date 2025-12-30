@@ -31,9 +31,13 @@ export default function Sidebar({
     setMenuOpenId(null);
   };
 
-  const handleConfirmDelete = (e) => {
+  const handleConfirmDelete = async (e) => {
     e.stopPropagation();
-    onDeleteConversation(confirmDeleteId);
+    try {
+      await onDeleteConversation(confirmDeleteId);
+    } catch (error) {
+      console.error('Delete failed:', error);
+    }
     setConfirmDeleteId(null);
   };
 
