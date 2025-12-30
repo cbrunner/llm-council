@@ -10,6 +10,7 @@ function App() {
   const [currentConversation, setCurrentConversation] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     loadConversations();
@@ -54,6 +55,7 @@ function App() {
 
   const handleSelectConversation = (id) => {
     setCurrentConversationId(id);
+    setSidebarOpen(false);
   };
 
   const handleArchiveConversation = async (id, archived) => {
@@ -207,6 +209,16 @@ function App() {
 
   return (
     <div className="app">
+      <button 
+        className="mobile-menu-btn"
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        aria-label="Toggle menu"
+      >
+        <span className="hamburger-icon"></span>
+      </button>
+      {sidebarOpen && (
+        <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />
+      )}
       <Sidebar
         conversations={conversations}
         currentConversationId={currentConversationId}
@@ -216,6 +228,8 @@ function App() {
         onDeleteConversation={handleDeleteConversation}
         showArchived={showArchived}
         onToggleShowArchived={handleToggleShowArchived}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
       <ChatInterface
         conversation={currentConversation}

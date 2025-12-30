@@ -10,6 +10,8 @@ export default function Sidebar({
   onDeleteConversation,
   showArchived,
   onToggleShowArchived,
+  isOpen,
+  onClose,
 }) {
   const [menuOpenId, setMenuOpenId] = useState(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
@@ -50,9 +52,14 @@ export default function Sidebar({
   const archivedConversations = conversations.filter(c => c.archived);
 
   return (
-    <div className="sidebar">
+    <div className={`sidebar ${isOpen ? 'open' : ''}`}>
       <div className="sidebar-header">
-        <h1>LLM Council</h1>
+        <div className="sidebar-header-top">
+          <h1>LLM Council</h1>
+          <button className="sidebar-close-btn" onClick={onClose} aria-label="Close sidebar">
+            &times;
+          </button>
+        </div>
         <button className="new-conversation-btn" onClick={onNewConversation}>
           + New Conversation
         </button>

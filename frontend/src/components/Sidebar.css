@@ -6,6 +6,7 @@
   flex-direction: column;
   height: 100vh;
   position: relative;
+  flex-shrink: 0;
 }
 
 .sidebar-header {
@@ -13,23 +14,47 @@
   border-bottom: 1px solid #e0e0e0;
 }
 
+.sidebar-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
 .sidebar-header h1 {
   font-size: 18px;
-  margin: 0 0 12px 0;
+  margin: 0;
   color: #333;
+}
+
+.sidebar-close-btn {
+  display: none;
+  width: 44px;
+  height: 44px;
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: #666;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.sidebar-close-btn:hover {
+  background: #e0e0e0;
 }
 
 .new-conversation-btn {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   background: #4a90e2;
   border: 1px solid #4a90e2;
   border-radius: 6px;
   color: #fff;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 15px;
   transition: background 0.2s;
   font-weight: 500;
+  min-height: 44px;
 }
 
 .new-conversation-btn:hover {
@@ -37,10 +62,15 @@
   border-color: #357abd;
 }
 
+.new-conversation-btn:active {
+  transform: scale(0.98);
+}
+
 .conversation-list {
   flex: 1;
   overflow-y: auto;
   padding: 8px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .no-conversations {
@@ -51,7 +81,7 @@
 }
 
 .conversation-item {
-  padding: 12px;
+  padding: 14px 12px;
   margin-bottom: 4px;
   border-radius: 6px;
   cursor: pointer;
@@ -60,6 +90,7 @@
   align-items: flex-start;
   justify-content: space-between;
   position: relative;
+  min-height: 48px;
 }
 
 .conversation-item:hover {
@@ -98,12 +129,17 @@
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px 8px;
-  font-size: 16px;
+  padding: 8px 10px;
+  font-size: 18px;
   color: #666;
   border-radius: 4px;
   opacity: 0;
   transition: opacity 0.2s;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .conversation-item:hover .conversation-menu-btn {
@@ -117,7 +153,7 @@
 .conversation-menu {
   position: absolute;
   right: 8px;
-  top: 36px;
+  top: 48px;
   background: white;
   border: 1px solid #e0e0e0;
   border-radius: 6px;
@@ -129,13 +165,14 @@
 .conversation-menu button {
   display: block;
   width: 100%;
-  padding: 10px 16px;
+  padding: 12px 20px;
   border: none;
   background: white;
   cursor: pointer;
   text-align: left;
-  font-size: 14px;
+  font-size: 15px;
   color: #333;
+  min-height: 44px;
 }
 
 .conversation-menu button:hover {
@@ -152,14 +189,15 @@
 
 .show-archived-btn {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   margin: 8px 0;
   background: transparent;
   border: 1px dashed #ccc;
   border-radius: 6px;
   color: #666;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 14px;
+  min-height: 44px;
 }
 
 .show-archived-btn:hover {
@@ -178,6 +216,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: 16px;
 }
 
 .delete-modal {
@@ -185,13 +224,15 @@
   padding: 24px;
   border-radius: 8px;
   max-width: 400px;
+  width: 100%;
   box-shadow: 0 4px 20px rgba(0,0,0,0.2);
 }
 
 .delete-modal p {
   margin: 0 0 20px 0;
   color: #333;
-  font-size: 15px;
+  font-size: 16px;
+  line-height: 1.5;
 }
 
 .delete-modal-actions {
@@ -201,12 +242,13 @@
 }
 
 .delete-modal-actions button {
-  padding: 8px 16px;
+  padding: 12px 20px;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 15px;
   border: 1px solid #ddd;
   background: white;
+  min-height: 44px;
 }
 
 .delete-modal-actions button:hover {
@@ -221,4 +263,32 @@
 
 .confirm-delete-btn:hover {
   background: #c62828 !important;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: 280px;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.1);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .conversation-menu-btn {
+    opacity: 1;
+  }
 }

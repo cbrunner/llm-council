@@ -16,10 +16,23 @@
   font-family: monospace;
   margin-bottom: 12px;
   font-weight: 600;
+  word-break: break-all;
 }
 
 .final-text {
   color: #333;
   line-height: 1.7;
   font-size: 15px;
+  word-wrap: break-word;
+}
+
+@media (max-width: 768px) {
+  .final-response {
+    padding: 16px;
+  }
+
+  .final-text {
+    font-size: 14px;
+    line-height: 1.6;
+  }
 }
