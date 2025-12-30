@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import './Sidebar.css';
 
 export default function Sidebar({
@@ -6,7 +6,45 @@ export default function Sidebar({
   currentConversationId,
   onSelectConversation,
   onNewConversation,
+  onArchiveConversation,
+  onDeleteConversation,
+  showArchived,
+  onToggleShowArchived,
 }) {
+  const [menuOpenId, setMenuOpenId] = useState(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+
+  const handleMenuClick = (e, convId) => {
+    e.stopPropagation();
+    setMenuOpenId(menuOpenId === convId ? null : convId);
+  };
+
+  const handleArchive = (e, convId, isArchived) => {
+    e.stopPropagation();
+    onArchiveConversation(convId, !isArchived);
+    setMenuOpenId(null);
+  };
+
+  const handleDeleteClick = (e, convId) => {
+    e.stopPropagation();
+    setConfirmDeleteId(convId);
+    setMenuOpenId(null);
+  };
+
+  const handleConfirmDelete = (e) => {
+    e.stopPropagation();
+    onDeleteConversation(confirmDeleteId);
+    setConfirmDeleteId(null);
+  };
+
+  const handleCancelDelete = (e) => {
+    e.stopPropagation();
+    setConfirmDeleteId(null);
+  };
+
+  const activeConversations = conversations.filter(c => !c.archived);
+  const archivedConversations = conversations.filter(c => c.archived);
+
   return (
     <div className="sidebar">
       <div className="sidebar-header">
@@ -17,10 +55,10 @@ export default function Sidebar({
       </div>
 
       <div className="conversation-list">
-        {conversations.length === 0 ? (
+        {activeConversations.length === 0 && !showArchived ? (
           <div className="no-conversations">No conversations yet</div>
         ) : (
-          conversations.map((conv) => (
+          activeConversations.map((conv) => (
             <div
               key={conv.id}
               className={`conversation-item ${
@@ -28,16 +66,94 @@ export default function Sidebar({
               }`}
               onClick={() => onSelectConversation(conv.id)}
             >
-              <div className="conversation-title">
-                {conv.title || 'New Conversation'}
+              <div className="conversation-content">
+                <div className="conversation-title">
+                  {conv.title || 'New Conversation'}
+                </div>
+                <div className="conversation-meta">
+                  {conv.message_count} messages
+                </div>
               </div>
-              <div className="conversation-meta">
-                {conv.message_count} messages
-              </div>
+              <button
+                className="conversation-menu-btn"
+                onClick={(e) => handleMenuClick(e, conv.id)}
+              >
+                ...
+              </button>
+              {menuOpenId === conv.id && (
+                <div className="conversation-menu">
+                  <button onClick={(e) => handleArchive(e, conv.id, conv.archived)}>
+                    Archive
+                  </button>
+                  <button className="delete-btn" onClick={(e) => handleDeleteClick(e, conv.id)}>
+                    Delete
+                  </button>
+                </div>
+              )}
             </div>
           ))
         )}
+
+        {archivedConversations.length > 0 && (
+          <>
+            <button 
+              className="show-archived-btn"
+              onClick={onToggleShowArchived}
+            >
+              {showArchived ? 'Hide' : 'Show'} Archived ({archivedConversations.length})
+            </button>
+            
+            {showArchived && archivedConversations.map((conv) => (
+              <div
+                key={conv.id}
+                className={`conversation-item archived ${
+                  conv.id === currentConversationId ? 'active' : ''
+                }`}
+                onClick={() => onSelectConversation(conv.id)}
+              >
+                <div className="conversation-content">
+                  <div className="conversation-title">
+                    {conv.title || 'New Conversation'}
+                  </div>
+                  <div className="conversation-meta">
+                    {conv.message_count} messages (archived)
+                  </div>
+                </div>
+                <button
+                  className="conversation-menu-btn"
+                  onClick={(e) => handleMenuClick(e, conv.id)}
+                >
+                  ...
+                </button>
+                {menuOpenId === conv.id && (
+                  <div className="conversation-menu">
+                    <button onClick={(e) => handleArchive(e, conv.id, conv.archived)}>
+                      Unarchive
+                    </button>
+                    <button className="delete-btn" onClick={(e) => handleDeleteClick(e, conv.id)}>
+                      Delete
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </>
+        )}
       </div>
+
+      {confirmDeleteId && (
+        <div className="delete-modal-overlay" onClick={handleCancelDelete}>
+          <div className="delete-modal" onClick={(e) => e.stopPropagation()}>
+            <p>Are you sure you want to permanently delete this conversation?</p>
+            <div className="delete-modal-actions">
+              <button onClick={handleCancelDelete}>Cancel</button>
+              <button className="confirm-delete-btn" onClick={handleConfirmDelete}>
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -78,9 +78,12 @@ def save_conversation(conversation: Dict[str, Any]):
         json.dump(conversation, f, indent=2)
 
 
-def list_conversations() -> List[Dict[str, Any]]:
+def list_conversations(include_archived: bool = False) -> List[Dict[str, Any]]:
     """
     List all conversations (metadata only).
+
+    Args:
+        include_archived: Whether to include archived conversations
 
     Returns:
         List of conversation metadata dicts
@@ -93,18 +96,58 @@ def list_conversations() -> List[Dict[str, Any]]:
             path = os.path.join(DATA_DIR, filename)
             with open(path, 'r') as f:
                 data = json.load(f)
-                # Return metadata only
+                is_archived = data.get("archived", False)
+                if not include_archived and is_archived:
+                    continue
                 conversations.append({
                     "id": data["id"],
                     "created_at": data["created_at"],
                     "title": data.get("title", "New Conversation"),
-                    "message_count": len(data["messages"])
+                    "message_count": len(data["messages"]),
+                    "archived": is_archived
                 })
 
     # Sort by creation time, newest first
     conversations.sort(key=lambda x: x["created_at"], reverse=True)
 
     return conversations
+
+
+def delete_conversation(conversation_id: str) -> bool:
+    """
+    Permanently delete a conversation.
+
+    Args:
+        conversation_id: Conversation identifier
+
+    Returns:
+        True if deleted, False if not found
+    """
+    path = get_conversation_path(conversation_id)
+    if os.path.exists(path):
+        os.remove(path)
+        return True
+    return False
+
+
+def archive_conversation(conversation_id: str, archived: bool = True) -> Optional[Dict[str, Any]]:
+    """
+    Archive or unarchive a conversation.
+
+    Args:
+        conversation_id: Conversation identifier
+        archived: True to archive, False to unarchive
+
+    Returns:
+        Updated conversation or None if not found
+    """
+    conversation = get_conversation(conversation_id)
+    if conversation is None:
+        return None
+
+    conversation["archived"] = archived
+    save_conversation(conversation)
+    return conversation
 
 
 def add_user_message(conversation_id: str, content: str):

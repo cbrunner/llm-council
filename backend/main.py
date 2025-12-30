@@ -46,6 +46,12 @@ class ConversationMetadata(BaseModel):
     created_at: str
     title: str
     message_count: int
+    archived: bool = False
+
+
+class ArchiveRequest(BaseModel):
+    """Request to archive/unarchive a conversation."""
+    archived: bool
 
 
 class Conversation(BaseModel):
@@ -63,9 +69,9 @@ async def root():
 
 
 @app.get("/api/conversations", response_model=List[ConversationMetadata])
-async def list_conversations():
+async def list_conversations(include_archived: bool = False):
     """List all conversations (metadata only)."""
-    return storage.list_conversations()
+    return storage.list_conversations(include_archived=include_archived)
 
 
 @app.post("/api/conversations", response_model=Conversation)
@@ -83,6 +89,24 @@ async def get_conversation(conversation_id: str):
     if conversation is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
     return conversation
+
+
+@app.delete("/api/conversations/{conversation_id}")
+async def delete_conversation(conversation_id: str):
+    """Permanently delete a conversation."""
+    deleted = storage.delete_conversation(conversation_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    return {"status": "deleted", "id": conversation_id}
+
+
+@app.patch("/api/conversations/{conversation_id}/archive")
+async def archive_conversation(conversation_id: str, request: ArchiveRequest):
+    """Archive or unarchive a conversation."""
+    conversation = storage.archive_conversation(conversation_id, request.archived)
+    if conversation is None:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    return {"status": "archived" if request.archived else "unarchived", "id": conversation_id}
 
 
 @app.post("/api/conversations/{conversation_id}/message")

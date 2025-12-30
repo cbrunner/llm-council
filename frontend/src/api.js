@@ -6,17 +6,6 @@ const API_BASE = '';
 
 export const api = {
   /**
-   * List all conversations.
-   */
-  async listConversations() {
-    const response = await fetch(`${API_BASE}/api/conversations`);
-    if (!response.ok) {
-      throw new Error('Failed to list conversations');
-    }
-    return response.json();
-  },
-
-  /**
    * Create a new conversation.
    */
   async createConversation() {
@@ -111,5 +100,46 @@ export const api = {
         }
       }
     }
+  },
+
+  async deleteConversation(conversationId) {
+    const response = await fetch(
+      `${API_BASE}/api/conversations/${conversationId}`,
+      {
+        method: 'DELETE',
+      }
+    );
+    if (!response.ok) {
+      throw new Error('Failed to delete conversation');
+    }
+    return response.json();
+  },
+
+  async archiveConversation(conversationId, archived) {
+    const response = await fetch(
+      `${API_BASE}/api/conversations/${conversationId}/archive`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ archived }),
+      }
+    );
+    if (!response.ok) {
+      throw new Error('Failed to archive conversation');
+    }
+    return response.json();
+  },
+
+  async listConversations(includeArchived = false) {
+    const url = includeArchived 
+      ? `${API_BASE}/api/conversations?include_archived=true`
+      : `${API_BASE}/api/conversations`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error('Failed to list conversations');
+    }
+    return response.json();
   },
 };
