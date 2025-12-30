@@ -17,9 +17,11 @@ This application implements a 3-stage council process:
 - Uses OpenRouter API for LLM calls
 - Serves static frontend in production mode
 - Endpoints:
-  - `GET /api/conversations` - List conversations
+  - `GET /api/conversations` - List conversations (supports ?include_archived=true)
   - `POST /api/conversations` - Create new conversation
   - `GET /api/conversations/{id}` - Get specific conversation
+  - `DELETE /api/conversations/{id}` - Delete conversation
+  - `PATCH /api/conversations/{id}/archive` - Archive/unarchive conversation
   - `POST /api/conversations/{id}/message` - Send message
   - `POST /api/conversations/{id}/message/stream` - Send message with streaming
 
@@ -52,6 +54,13 @@ The workflow "LLM Council" runs both servers:
 - Run: `python -m backend.main` (serves both API and static frontend)
 
 ## Recent Changes
+
+- 2024-12-30: Added conversation archive and delete functionality
+  - Backend: Added DELETE and PATCH endpoints for conversations
+  - Backend: Added archived field to conversation storage
+  - Frontend: Added menu button on conversation items (shows on hover)
+  - Frontend: Archive/unarchive and delete options with confirmation modal
+  - Frontend: Toggle to show/hide archived conversations
 
 - 2024-12-30: Configured for Replit environment
   - Updated Vite to use port 5000 and allow all hosts
