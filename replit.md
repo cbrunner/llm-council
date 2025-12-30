@@ -55,6 +55,14 @@ The workflow "LLM Council" runs both servers:
 
 ## Recent Changes
 
+- 2024-12-30: Made UI mobile-friendly
+  - Added hamburger menu button for mobile navigation
+  - Sidebar collapses off-screen on mobile (slides in/out)
+  - Added responsive media queries at 768px breakpoint
+  - Touch targets meet 44px minimum for mobile accessibility
+  - Stage tabs and visualizations stack properly on narrow screens
+  - Input form stacks vertically on mobile
+
 - 2024-12-30: Added conversation archive and delete functionality
   - Backend: Added DELETE and PATCH endpoints for conversations
   - Backend: Added archived field to conversation storage
