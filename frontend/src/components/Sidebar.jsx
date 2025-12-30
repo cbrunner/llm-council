@@ -12,6 +12,7 @@ export default function Sidebar({
   onToggleShowArchived,
   isOpen,
   onClose,
+  onOpenSettings,
 }) {
   const [menuOpenId, setMenuOpenId] = useState(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
@@ -150,6 +151,12 @@ export default function Sidebar({
             ))}
           </>
         )}
+      </div>
+
+      <div className="sidebar-footer">
+        <button className="settings-btn" onClick={onOpenSettings}>
+          Settings
+        </button>
       </div>
 
       {confirmDeleteId && (

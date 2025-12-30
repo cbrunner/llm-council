@@ -66,6 +66,12 @@ The workflow uses `bash start.sh` which runs both servers reliably. Configuratio
 
 ## Recent Changes
 
+- 2024-12-30: Added Settings page with web search toggle
+  - Settings button added to sidebar footer
+  - Settings page allows toggling OpenRouter's web search feature
+  - Web search plugin added to Stage 1 API calls when enabled
+  - Settings stored in data/conversations/_settings.json
+
 - 2024-12-30: Made UI mobile-friendly
   - Added hamburger menu button for mobile navigation
   - Sidebar collapses off-screen on mobile (slides in/out)

@@ -54,6 +54,11 @@ class ArchiveRequest(BaseModel):
     archived: bool
 
 
+class SettingsRequest(BaseModel):
+    """Request to update settings."""
+    web_search_enabled: bool = False
+
+
 class Conversation(BaseModel):
     """Full conversation with all messages."""
     id: str
@@ -109,6 +114,22 @@ async def archive_conversation(conversation_id: str, request: ArchiveRequest):
     return {"status": "archived" if request.archived else "unarchived", "id": conversation_id}
 
 
+@app.get("/api/settings")
+async def get_settings():
+    """Get current settings."""
+    return storage.get_settings()
+
+
+@app.put("/api/settings")
+async def update_settings(request: SettingsRequest):
+    """Update settings."""
+    settings = {
+        "web_search_enabled": request.web_search_enabled
+    }
+    storage.save_settings(settings)
+    return settings
+
+
 @app.post("/api/conversations/{conversation_id}/message")
 async def send_message(conversation_id: str, request: SendMessageRequest):
     """
@@ -131,9 +152,14 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
         title = await generate_conversation_title(request.content)
         storage.update_conversation_title(conversation_id, title)
 
+    # Get settings for web search
+    settings = storage.get_settings()
+    web_search = settings.get("web_search_enabled", False)
+
     # Run the 3-stage council process
     stage1_results, stage2_results, stage3_result, metadata = await run_full_council(
-        request.content
+        request.content,
+        web_search=web_search
     )
 
     # Add assistant message with all stages
@@ -177,9 +203,13 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
             if is_first_message:
                 title_task = asyncio.create_task(generate_conversation_title(request.content))
 
+            # Get settings for web search
+            settings = storage.get_settings()
+            web_search = settings.get("web_search_enabled", False)
+
             # Stage 1: Collect responses
             yield f"data: {json.dumps({'type': 'stage1_start'})}\n\n"
-            stage1_results = await stage1_collect_responses(request.content)
+            stage1_results = await stage1_collect_responses(request.content, web_search=web_search)
             yield f"data: {json.dumps({'type': 'stage1_complete', 'data': stage1_results})}\n\n"
 
             # Stage 2: Collect rankings

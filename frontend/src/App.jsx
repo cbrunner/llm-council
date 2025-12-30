@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import ChatInterface from './components/ChatInterface';
+import Settings from './components/Settings';
 import { api } from './api';
 import './App.css';
 
@@ -11,6 +12,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     loadConversations();
@@ -88,6 +90,15 @@ function App() {
 
   const handleToggleShowArchived = () => {
     setShowArchived(!showArchived);
+  };
+
+  const handleOpenSettings = () => {
+    setShowSettings(true);
+    setSidebarOpen(false);
+  };
+
+  const handleCloseSettings = () => {
+    setShowSettings(false);
   };
 
   const handleSendMessage = async (content) => {
@@ -230,12 +241,17 @@ function App() {
         onToggleShowArchived={handleToggleShowArchived}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        onOpenSettings={handleOpenSettings}
       />
-      <ChatInterface
-        conversation={currentConversation}
-        onSendMessage={handleSendMessage}
-        isLoading={isLoading}
-      />
+      {showSettings ? (
+        <Settings onClose={handleCloseSettings} />
+      ) : (
+        <ChatInterface
+          conversation={currentConversation}
+          onSendMessage={handleSendMessage}
+          isLoading={isLoading}
+        />
+      )}
     </div>
   );
 }

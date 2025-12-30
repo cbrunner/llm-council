@@ -92,7 +92,7 @@ def list_conversations(include_archived: bool = False) -> List[Dict[str, Any]]:
 
     conversations = []
     for filename in os.listdir(DATA_DIR):
-        if filename.endswith('.json'):
+        if filename.endswith('.json') and not filename.startswith('_'):
             path = os.path.join(DATA_DIR, filename)
             with open(path, 'r') as f:
                 data = json.load(f)
@@ -213,3 +213,46 @@ def update_conversation_title(conversation_id: str, title: str):
 
     conversation["title"] = title
     save_conversation(conversation)
+
+
+def get_settings_path() -> str:
+    """Get the file path for settings."""
+    return os.path.join(DATA_DIR, "_settings.json")
+
+
+def get_settings() -> Dict[str, Any]:
+    """
+    Load settings from storage.
+
+    Returns:
+        Settings dict with default values if not found
+    """
+    ensure_data_dir()
+    path = get_settings_path()
+
+    default_settings = {
+        "web_search_enabled": False
+    }
+
+    if not os.path.exists(path):
+        return default_settings
+
+    try:
+        with open(path, 'r') as f:
+            saved = json.load(f)
+            return {**default_settings, **saved}
+    except Exception:
+        return default_settings
+
+
+def save_settings(settings: Dict[str, Any]):
+    """
+    Save settings to storage.
+
+    Args:
+        settings: Settings dict to save
+    """
+    ensure_data_dir()
+    path = get_settings_path()
+    with open(path, 'w') as f:
+        json.dump(settings, f, indent=2)
