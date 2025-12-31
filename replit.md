@@ -66,6 +66,13 @@ The workflow uses `bash start.sh` which runs both servers reliably. Configuratio
 
 ## Recent Changes
 
+- 2024-12-31: Added retry logic to OpenRouter API calls
+  - Using tenacity library with exponential backoff (2s min, 10s max)
+  - 3 max retries for timeout and 5xx/429 errors
+  - No retry on 4xx client errors (except rate limit)
+  - Partial results handling: proceeds with 2+ models in Stage 1
+  - Helpful error messages when retries are exhausted
+
 - 2024-12-30: Added Settings page with web search toggle
   - Settings button added to sidebar footer
   - Settings page allows toggling OpenRouter's web search feature

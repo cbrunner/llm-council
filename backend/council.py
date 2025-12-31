@@ -5,7 +5,10 @@ from .openrouter import query_models_parallel, query_model
 from .config import COUNCIL_MODELS, CHAIRMAN_MODEL
 
 
-async def stage1_collect_responses(user_query: str, web_search: bool = False) -> List[Dict[str, Any]]:
+MIN_MODELS_FOR_RANKING = 2
+
+
+async def stage1_collect_responses(user_query: str, web_search: bool = False) -> tuple[List[Dict[str, Any]], List[str]]:
     """
     Stage 1: Collect individual responses from all council models.
 
@@ -14,29 +17,30 @@ async def stage1_collect_responses(user_query: str, web_search: bool = False) ->
         web_search: Whether to enable web search
 
     Returns:
-        List of dicts with 'model' and 'response' keys
+        Tuple of (successful results list, failed models list)
     """
     messages = [{"role": "user", "content": user_query}]
 
-    # Query all models in parallel
     responses = await query_models_parallel(COUNCIL_MODELS, messages, web_search=web_search)
 
-    # Format results
     stage1_results = []
+    failed_models = []
     for model, response in responses.items():
-        if response is not None:  # Only include successful responses
+        if response is not None:
             stage1_results.append({
                 "model": model,
                 "response": response.get('content', '')
             })
+        else:
+            failed_models.append(model)
 
-    return stage1_results
+    return stage1_results, failed_models
 
 
 async def stage2_collect_rankings(
     user_query: str,
     stage1_results: List[Dict[str, Any]]
-) -> Tuple[List[Dict[str, Any]], Dict[str, str]]:
+) -> Tuple[List[Dict[str, Any]], Dict[str, str], List[str]]:
     """
     Stage 2: Each model ranks the anonymized responses.
 
@@ -45,18 +49,15 @@ async def stage2_collect_rankings(
         stage1_results: Results from Stage 1
 
     Returns:
-        Tuple of (rankings list, label_to_model mapping)
+        Tuple of (rankings list, label_to_model mapping, failed models list)
     """
-    # Create anonymized labels for responses (Response A, Response B, etc.)
-    labels = [chr(65 + i) for i in range(len(stage1_results))]  # A, B, C, ...
+    labels = [chr(65 + i) for i in range(len(stage1_results))]
 
-    # Create mapping from label to model name
     label_to_model = {
         f"Response {label}": result['model']
         for label, result in zip(labels, stage1_results)
     }
 
-    # Build the ranking prompt
     responses_text = "\n\n".join([
         f"Response {label}:\n{result['response']}"
         for label, result in zip(labels, stage1_results)
@@ -95,11 +96,10 @@ Now provide your evaluation and ranking:"""
 
     messages = [{"role": "user", "content": ranking_prompt}]
 
-    # Get rankings from all council models in parallel
     responses = await query_models_parallel(COUNCIL_MODELS, messages)
 
-    # Format results
     stage2_results = []
+    failed_models = []
     for model, response in responses.items():
         if response is not None:
             full_text = response.get('content', '')
@@ -109,8 +109,10 @@ Now provide your evaluation and ranking:"""
                 "ranking": full_text,
                 "parsed_ranking": parsed
             })
+        else:
+            failed_models.append(model)
 
-    return stage2_results, label_to_model
+    return stage2_results, label_to_model, failed_models
 
 
 async def stage3_synthesize_final(
@@ -197,8 +199,12 @@ def parse_ranking_from_text(ranking_text: str) -> List[str]:
             # This pattern looks for: number, period, optional space, "Response X"
             numbered_matches = re.findall(r'\d+\.\s*Response [A-Z]', ranking_section)
             if numbered_matches:
-                # Extract just the "Response X" part
-                return [re.search(r'Response [A-Z]', m).group() for m in numbered_matches]
+                results = []
+                for m in numbered_matches:
+                    match = re.search(r'Response [A-Z]', m)
+                    if match:
+                        results.append(match.group())
+                return results
 
             # Fallback: Extract all "Response X" patterns in order
             matches = re.findall(r'Response [A-Z]', ranking_section)
@@ -296,7 +302,10 @@ Title:"""
 
 async def run_full_council(user_query: str, web_search: bool = False) -> Tuple[List, List, Dict, Dict]:
     """
-    Run the complete 3-stage council process.
+    Run the complete 3-stage council process with graceful failure handling.
+
+    Returns partial results if at least MIN_MODELS_FOR_RANKING models succeed in Stage 1.
+    Individual model failures don't break the entire process.
 
     Args:
         user_query: The user's question
@@ -305,33 +314,41 @@ async def run_full_council(user_query: str, web_search: bool = False) -> Tuple[L
     Returns:
         Tuple of (stage1_results, stage2_results, stage3_result, metadata)
     """
-    # Stage 1: Collect individual responses
-    stage1_results = await stage1_collect_responses(user_query, web_search=web_search)
+    all_failed_models = []
 
-    # If no models responded successfully, return error
+    stage1_results, stage1_failed = await stage1_collect_responses(user_query, web_search=web_search)
+    all_failed_models.extend(stage1_failed)
+
     if not stage1_results:
         return [], [], {
             "model": "error",
-            "response": "All models failed to respond. Please try again."
-        }, {}
+            "response": "All models failed to respond after retrying. This may be due to API issues or rate limiting. Please try again in a few minutes."
+        }, {"failed_models": all_failed_models}
 
-    # Stage 2: Collect rankings
-    stage2_results, label_to_model = await stage2_collect_rankings(user_query, stage1_results)
+    if len(stage1_results) < MIN_MODELS_FOR_RANKING:
+        model_names = [r['model'] for r in stage1_results]
+        return stage1_results, [], {
+            "model": "error",
+            "response": f"Only {len(stage1_results)} model(s) responded ({', '.join(model_names)}). At least {MIN_MODELS_FOR_RANKING} models are needed for ranking. The remaining models failed: {', '.join(stage1_failed)}."
+        }, {"failed_models": all_failed_models, "partial_stage1": True}
 
-    # Calculate aggregate rankings
+    stage2_results, label_to_model, stage2_failed = await stage2_collect_rankings(user_query, stage1_results)
+    all_failed_models.extend(stage2_failed)
+
     aggregate_rankings = calculate_aggregate_rankings(stage2_results, label_to_model)
 
-    # Stage 3: Synthesize final answer
     stage3_result = await stage3_synthesize_final(
         user_query,
         stage1_results,
         stage2_results
     )
 
-    # Prepare metadata
     metadata = {
         "label_to_model": label_to_model,
         "aggregate_rankings": aggregate_rankings
     }
+    if all_failed_models:
+        metadata["failed_models"] = list(set(all_failed_models))
+        metadata["warning"] = f"Some models failed during the council process: {', '.join(set(all_failed_models))}"
 
     return stage1_results, stage2_results, stage3_result, metadata
