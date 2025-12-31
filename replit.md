@@ -66,6 +66,12 @@ The workflow uses `bash start.sh` which runs both servers reliably. Configuratio
 
 ## Recent Changes
 
+- 2024-12-31: Fixed frontend crash when all models fail
+  - Added hasError prop to Stage1/Stage2 components to detect error states
+  - Components now show clear error messages instead of crashing
+  - Error states styled with red/pink theme for visibility
+  - Each Stage component has self-contained error styling in its CSS
+
 - 2024-12-31: Added retry logic to OpenRouter API calls
   - Using tenacity library with exponential backoff (2s min, 10s max)
   - 3 max retries for timeout and 5xx/429 errors
