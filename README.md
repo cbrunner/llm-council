@@ -79,9 +79,30 @@ npm run dev
 
 Then open http://localhost:5173 in your browser.
 
+## Features
+
+### Conversation Management
+- **Persistent History**: All conversations are automatically saved and can be resumed later
+- **Auto-generated Titles**: Conversations get descriptive titles based on your first message
+- **Archive & Delete**: Archive conversations to hide them from the main list, or delete them permanently
+
+### Settings
+- **Web Search**: Toggle OpenRouter's web search feature to give models access to current information (useful for recent events, current prices, etc.)
+
+### Reliability & Error Handling
+- **Automatic Retries**: API calls retry up to 3 times with exponential backoff (2-10 seconds)
+- **Smart Retry Logic**: Retries on timeouts, server errors (5xx), and rate limits (429) - fails fast on auth errors
+- **Partial Results**: The council continues even if some models fail - only needs 2+ models to proceed with ranking
+- **Clear Error Messages**: Helpful explanations when things go wrong
+
+### Mobile Support
+- **Responsive Design**: Works on desktop and mobile devices
+- **Collapsible Sidebar**: Hamburger menu for mobile navigation
+- **Touch-Friendly**: All interactive elements meet accessibility guidelines
+
 ## Tech Stack
 
-- **Backend:** FastAPI (Python 3.10+), async httpx, OpenRouter API
+- **Backend:** FastAPI (Python 3.10+), async httpx, OpenRouter API, tenacity for retries
 - **Frontend:** React + Vite, react-markdown for rendering
 - **Storage:** JSON files in `data/conversations/`
 - **Package Management:** uv for Python, npm for JavaScript
