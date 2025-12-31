@@ -159,6 +159,24 @@
   font-size: 12px;
 }
 
+.stage2.error-state {
+  background: #fff5f5;
+  border-color: #f5c6c6;
+}
+
+.stage2.error-state .stage-title {
+  color: #c53030;
+}
+
+.stage2 .stage-error {
+  background: #fff;
+  padding: 16px;
+  border-radius: 6px;
+  border: 1px solid #f5c6c6;
+  color: #c53030;
+  text-align: center;
+}
+
 @media (max-width: 768px) {
   .aggregate-rankings {
     padding: 12px;

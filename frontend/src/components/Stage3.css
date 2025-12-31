@@ -26,6 +26,20 @@
   word-wrap: break-word;
 }
 
+.stage3.error-state {
+  background: #fff5f5;
+  border-color: #f5c6c6;
+}
+
+.error-response {
+  background: #fff;
+  border-color: #f5c6c6;
+}
+
+.error-state .stage-title {
+  color: #c53030;
+}
+
 @media (max-width: 768px) {
   .final-response {
     padding: 16px;
